@@ -19,7 +19,7 @@ from utils import process_file
 
 
 # 数据预处理
-process_file("./imu_process/imu_11.txt", "./imu_process/imu11_out.txt")
+# process_file("./imu_process/imu_11.txt", "./imu_process/imu11_out.txt")
 
 imu_data_path = "./imu_process/imu11_out.txt"
 imu_data = np.loadtxt("./imu_process/imu11_out.txt")
