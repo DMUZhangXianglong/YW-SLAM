@@ -1,7 +1,7 @@
 '''
 * @Author: DMU zhangxianglong
 * @Date: 2024-05-08 14:39:57
-* @LastEditTime: 2024-05-10 02:12:57
+* @LastEditTime: 2024-05-10 02:39:53
 * @LastEditors: DMU zhangxianglong
 * @FilePath: /YW-SLAM/imu_process/ImuIntegration.py
 * @Description: 实现imu积分
@@ -27,7 +27,7 @@ class ImuIntegration():
         * @return {*}
         '''
         dt = imu.timestamp - self.timestamp
-        if dt > 0.0 and dt < 0.1:
+        if dt > 0.0 and dt < 0.11:
             # 位移
             self.p = self.p + self.v * dt  + (0.5 * np.dot(self.R, ((imu.acceleration - imu.init_ba)* dt * dt)))  + (0.5 * imu.gravity * dt * dt)
             # self.p = self.p + self.v * dt  + 0.5 * (self.R @ (imu.acceleration - imu.init_ba)) * dt * dt + 0.5 * imu.gravity * dt * dt
@@ -37,11 +37,8 @@ class ImuIntegration():
             # self.v = self.v  + self.R @ (imu.acceleration - imu.init_ba) * dt  + imu.gravity * dt
 
             # 旋转
-            # omga = (imu.gyroscope - imu.init_bg) * dt
-            # self.R = np.dot(self.R, so3ToSO3(omga))
-
-            # print(self.R, "\n")
-            # self.R = np.dot(self.R, np.identity(3))
+            omga = (imu.gyroscope - imu.init_bg) * dt
+            self.R = np.dot(self.R, so3ToSO3(omga))
        
         self.timestamp = imu.timestamp 
         

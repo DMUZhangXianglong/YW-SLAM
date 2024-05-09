@@ -1,7 +1,7 @@
 '''
 Author: DMU zhangxianglong
 Date: 2024-05-09 10:17:57
-* @LastEditTime: 2024-05-10 02:20:01
+* @LastEditTime: 2024-05-10 02:54:50
 * @LastEditors: DMU zhangxianglong
 * @FilePath: /YW-SLAM/imu_process/main.py
 Description: 
@@ -19,10 +19,10 @@ from utils import process_file
 
 
 # 数据预处理
-process_file("./imu_process/imu_11.txt", "./imu_process/imu11_out.txt")
+# process_file("./imu_process/imu_11.txt", "./imu_process/imu11_out.txt")
 
-imu_data_path = "./imu_process/imu11_out.txt"
-imu_data = np.loadtxt("./imu_process/imu11_out.txt")
+imu_data_path = "./imu_process/imu_out.txt"
+imu_data = np.loadtxt("./imu_process/imu_out.txt")
 count_lins = imu_data.shape[0]
 
 def main():
@@ -32,7 +32,7 @@ def main():
 
         # 初始化IMU
         gravity = np.array([0.0, 0.0, -9.8])
-        init_bg = np.array([00.000224886, -7.61038e-05, -0.000742259])
+        init_bg = np.array([0.000224886, -7.61038e-05, -0.000742259])
         init_ba = np.array([-0.165205, 0.0926887, 0.0058049])
         imu = IMU(imu_data, gravity, init_bg, init_ba)
         
@@ -77,11 +77,11 @@ def main():
         print("z:", z)
         
         # 绘制图像
-        # plt.plot(range(len(lvy)), lvy)
-        # plt.plot(range(len(lvx)), lvx)
-        # plt.plot(range(len(lvz)), lvz)
+        plt.plot(range(len(lvx)), lvx)
+        plt.plot(range(len(lvy)), lvy)
+        plt.plot(range(len(lvz)), lvz)
         # plt.plot(ly, lx)
-        plt.plot(lx, ly)
+        # plt.plot(lx, ly)
         plt.title('')
         plt.title('')
         plt.xlabel('x')
