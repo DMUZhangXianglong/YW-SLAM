@@ -1,7 +1,7 @@
 '''
 * @Author: DMU zhangxianglong
 * @Date: 2024-05-08 14:39:57
-* @LastEditTime: 2024-05-09 17:30:47
+* @LastEditTime: 2024-05-10 02:12:57
 * @LastEditors: DMU zhangxianglong
 * @FilePath: /YW-SLAM/imu_process/ImuIntegration.py
 * @Description: 实现imu积分
@@ -29,21 +29,23 @@ class ImuIntegration():
         dt = imu.timestamp - self.timestamp
         if dt > 0.0 and dt < 0.1:
             # 位移
-            self.p = self.p + self.v * dt  + (0.5 * np.dot(self.R, (imu.acceleration - imu.init_ba)) * dt * dt) + 0.5 * imu.gravity * dt * dt
-            
+            self.p = self.p + self.v * dt  + (0.5 * np.dot(self.R, ((imu.acceleration - imu.init_ba)* dt * dt)))  + (0.5 * imu.gravity * dt * dt)
+            # self.p = self.p + self.v * dt  + 0.5 * (self.R @ (imu.acceleration - imu.init_ba)) * dt * dt + 0.5 * imu.gravity * dt * dt
+
             # 速度
-            self.v = self.v  + (np.dot(self.R, (imu.acceleration - imu.init_ba)) * dt) + imu.gravity * dt
-            
-            print("acceleration:", imu.acceleration.shape)
-            print("init_ba:", imu.init_ba.shape)
-            print("temp:", (imu.acceleration - imu.init_ba).shape)
-            print("v:", self.v.shape)
+            self.v = self.v  + np.dot(self.R, ((imu.acceleration - imu.init_ba) * dt)) + imu.gravity * dt
+            # self.v = self.v  + self.R @ (imu.acceleration - imu.init_ba) * dt  + imu.gravity * dt
+
             # 旋转
-            omga = (imu.acceleration - imu.init_bg) * dt
-            self.R = np.dot(self.R, so3ToSO3(omga))
+            # omga = (imu.gyroscope - imu.init_bg) * dt
+            # self.R = np.dot(self.R, so3ToSO3(omga))
+
+            # print(self.R, "\n")
+            # self.R = np.dot(self.R, np.identity(3))
+       
         self.timestamp = imu.timestamp 
         
-        # print("position:", self.p.shape)
+        # print("p.x:", self.p[0][0],"\n")
         # print("R:", self.R.shape)
         # print("v:", self.v.shape,"\n")
         

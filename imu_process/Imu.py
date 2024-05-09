@@ -1,7 +1,7 @@
 '''
 * @Author: DMU zhangxianglong
 * @Date: 2024-05-08 15:01:35
-* @LastEditTime: 2024-05-09 17:32:34
+* @LastEditTime: 2024-05-09 22:31:22
 * @LastEditors: DMU zhangxianglong
 * @FilePath: /YW-SLAM/imu_process/Imu.py
 * @Description: 组织imu数据
@@ -33,11 +33,18 @@ class IMU():
 
     
     def updateData(self, line):
+        '''
+        * @description: 
+        * @param {*} self:
+        * @param {*} line:第k个IMU数据
+        * @return {*}
+        '''
         imu_data = self.data[line]
         self.timestamp = imu_data[0]
         self.gyroscope[0] = imu_data[1]
         self.gyroscope[1]= imu_data[2]
         self.gyroscope[2] = imu_data[3]
+        
         self.acceleration[0] = imu_data[4]
         self.acceleration[1] = imu_data[5]
         self.acceleration[2] = imu_data[6]
