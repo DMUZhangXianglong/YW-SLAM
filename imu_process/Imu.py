@@ -48,9 +48,11 @@ class IMU():
         self.acceleration[0] = imu_data[4]
         self.acceleration[1] = imu_data[5]
         self.acceleration[2] = imu_data[6]
+
         # 改为3*1向量
         self.gyroscope = self.gyroscope.reshape((3,1))
         self.acceleration = self.acceleration.reshape((3,1))
+ 
         
 
 

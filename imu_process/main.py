@@ -1,7 +1,7 @@
 '''
 Author: DMU zhangxianglong
 Date: 2024-05-09 10:17:57
-* @LastEditTime: 2024-05-10 02:54:50
+* @LastEditTime: 2024-05-13 15:38:23
 * @LastEditors: DMU zhangxianglong
 * @FilePath: /YW-SLAM/imu_process/main.py
 Description: 
@@ -38,12 +38,38 @@ def main():
         
         # 初始化积分器
         imu_integration = ImuIntegration()
+        VX = []
+        VY = []
+        VZ = []
         
         # 主循序
         print("开始主循环")
         for line in tqdm(range(count_lins)):
             imu.updateData(line)
             imu_integration.integration(imu)
+            
+            VX.append(imu_integration.v[0][0])
+            VY.append(imu_integration.v[1][0])
+            VZ.append(imu_integration.v[2][0])
+            
+        # 画图
+        plt.figure()
+        # 绘制图像
+        plt.plot(range(len(VX)), VX, label='vx')
+        plt.plot(range(len(VY)), VY, label='vy')
+        plt.plot(range(len(VZ)), VZ, label='vz')
+        
+        # 添加标签和标题
+        plt.xlabel('x')
+        plt.ylabel('y')
+        plt.title('Sine Function')
+
+        # 添加图例
+        plt.legend()
+
+        # 显示图表
+        plt.show()
+        
     else:
         print("Please check the IMU data file.")
 
