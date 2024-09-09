@@ -1,9 +1,9 @@
 '''
 * @Author: DMU zhangxianglong
 * @Date: 2024-09-09 13:24:58
-* @LastEditTime: 2024-09-09 15:47:00
+* @LastEditTime: 2024-09-09 21:11:51
 * @LastEditors: DMU zhangxianglong
-* @FilePath: /yw_ws/YW-SLAM/ros2_ws/lidar_2d/lidar_2d/icp_2d.py
+* @FilePath: /YW-SLAM/ros2_ws/lidar_2d/lidar_2d/icp_2d.py
 * @Description: 
 '''
 import rclpy
@@ -12,7 +12,6 @@ from sensor_msgs.msg import LaserScan
 import cv2 
 import numpy as np
 import sophuspy as sp
-import eigenpy
 
 
 class LaserScanSubscriber(Node):
@@ -26,21 +25,12 @@ class LaserScanSubscriber(Node):
             10)
         self.subscription  # 防止未被使用的变量被垃圾回收
         self.image = None
+        self.color = [0, 255, 0]
+
 
     # 回调函数
     def LaserHandler(self, msg):
         self.Visualize2DScan(msg, self.image)
-        # 初始化 eigenpy 的 numpy 兼容模式
-        # eigenpy.switchToNumpyArray()
-
-        # 创建 3x3 矩阵
-        matrix = eigenpy.Matrix3d()
-        matrix.setIdentity()  # 将矩阵初始化为单位矩阵
-        print("Matrix:\n", matrix)
-
-        # 创建 3x1 向量
-        vector = eigenpy.Vector3d(1.0, 2.0, 3.0)
-        print("Vector:\n", vector)
         # self.get_logger().info(f'Received a LaserScan message:{sp.SO2()}')
         # self.get_logger().info(f'Angle Min: {msg.angle_min}')
         # self.get_logger().info(f'Angle Max: {msg.angle_max}')
@@ -62,7 +52,16 @@ class LaserScanSubscriber(Node):
             if (real_angle < msg.angle_min + 30 * np.pi / 180.0 or real_angle > msg.angle_max - 30 * np.pi / 180.0):
                 continue
             
+            psubmap = sp.SE2().inverse() * (sp.SE2() * np.array([x, y]))
+            image_x = int(psubmap[0] * 50.0 + 800 / 2)
+            image_y = int(psubmap[1] * 50.0 + 800 / 2)
             
+
+            if (image_x >= 0 and image_x < image.shape[0] and image_y >= 0 and image_y < image.shape[1]):
+                image[image_y, image_x] = self.color
+                cv2.imshow("scan", image)
+                           
+        cv2.waitKey(20) 
             
 
 
