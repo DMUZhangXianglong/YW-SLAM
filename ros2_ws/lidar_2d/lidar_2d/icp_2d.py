@@ -1,9 +1,9 @@
 '''
 * @Author: DMU zhangxianglong
 * @Date: 2024-09-09 13:24:58
-* @LastEditTime: 2024-09-09 21:11:51
+* @LastEditTime: 2024-09-10 10:12:51
 * @LastEditors: DMU zhangxianglong
-* @FilePath: /YW-SLAM/ros2_ws/lidar_2d/lidar_2d/icp_2d.py
+* @FilePath: /yw_ws/YW-SLAM/ros2_ws/lidar_2d/lidar_2d/icp_2d.py
 * @Description: 
 '''
 import rclpy
@@ -60,7 +60,8 @@ class LaserScanSubscriber(Node):
             if (image_x >= 0 and image_x < image.shape[0] and image_y >= 0 and image_y < image.shape[1]):
                 image[image_y, image_x] = self.color
                 cv2.imshow("scan", image)
-                           
+        
+        # 显示画面   
         cv2.waitKey(20) 
             
 
