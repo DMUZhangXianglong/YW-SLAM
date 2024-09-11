@@ -1,9 +1,9 @@
 '''
 * @Author: DMU zhangxianglong
 * @Date: 2024-09-09 13:24:58
-* @LastEditTime: 2024-09-10 16:16:22
+* @LastEditTime: 2024-09-11 22:11:47
 * @LastEditors: DMU zhangxianglong
-* @FilePath: /yw_ws/YW-SLAM/ros2_ws/lidar_2d/lidar_2d/icp_2d.py
+* @FilePath: /YW-SLAM/ros2_ws/lidar_2d/lidar_2d/icp_2d.py
 * @Description: 
 '''
 import rclpy
@@ -12,7 +12,8 @@ from sensor_msgs.msg import LaserScan
 import cv2 
 import numpy as np
 import sophuspy as sp
-
+from scipy.spatial import KDTree
+from tqdm import tqdm
 
 
 class LaserScanSubscriber(Node):
@@ -28,10 +29,25 @@ class LaserScanSubscriber(Node):
         self.image = None
         self.color = [0, 255, 0]
 
-
+        self.last_msg = None
+        self.current_msg = None
+    
     # 回调函数
     def LaserHandler(self, msg):
-        self.Visualize2DScan(msg, self.image)
+        self.current_msg = msg
+        if(self.last_msg == None):
+            self.last_msg = self.current_msg
+            return True
+
+        icp = Icp2d()
+        icp.SetSource(self.last_msg)
+        icp.SetTarget(self.current_msg)
+        pose = sp.SE2()
+        icp.AlignGaussNewton(pose)
+
+        # self.Visualize2DScan(msg, self.image)
+        # print(len(msg.ranges))
+
         # self.get_logger().info(f'Received a LaserScan message:{sp.SO2()}')
         # self.get_logger().info(f'Angle Min: {msg.angle_min}')
         # self.get_logger().info(f'Angle Max: {msg.angle_max}')
@@ -71,27 +87,78 @@ class Icp2d():
     def __init__(self):
         self.source = None
         self.target = None
+
+        self.target_cloud = None
+        self.kdtree = KdTree()
     
     def SetSource(self, source):
         self.source = source
     
     def SetTarget(self, target):
         self.target = target
+        self.BuildTargetKdTree()
         
     def BuildTargetKdTree(self):
         if(self.target == None):
             return
         
-        for i in range(len(self.target)):
+        # 初始化2d点云
+        self.target_cloud = Cloud2d()
+    
+        for i in range(len(self.target.ranges)):
             if(self.target.ranges[i] < self.target.range_min or self.target.ranges[i] > self.target.range_max):
                 continue
             
             real_angle = self.target.angle_min + i * self.target.angle_increment
             
-            p = Point2D
+            p = Point2D()
             p.x = self.target.ranges[i] * np.cos(real_angle)
             p.y = self.target.ranges[i] * np.sin(real_angle)
             
+            self.target_cloud.push_back(p)
+        
+        self.target_cloud.width = len(self.target_cloud.points)
+        self.kdtree.setInputCloud(self.target_cloud)
+            
+    def AlignGaussNewton(self, init_pose):
+        iterations = 10
+        cost = 0
+        last_cost = 0
+        current_pose = init_pose
+        max_dis2 = 0.01
+        min_effect_pts = 20
+
+        for iter in range(iterations):
+            H = np.zeros((3,3))
+            b = np.zeros((3,1))
+            cost = 0
+            effective_num = 0
+
+            # 遍历source
+            for i in range(len(self.source.ranges)):
+            # for i in tqdm(len(self.source.ranges)):
+                # 距离
+                r = self.source.ranges[i]
+                
+                if (r < self.source.range_min or r > self.source.range_max):
+                    continue
+                
+                angle = self.source.angle_min + i * self.source.angle_increment
+                theta = current_pose.so2().log()
+                pw = current_pose * np.array([r * np.cos(angle), r * np.sin(angle)])
+                pt = Point2D()
+                pt.x = pw[0]
+                pt.y = pw[1]
+
+                # 最近邻
+                nn_idx, dis = self.kdtree.nearestKSearch(pt, 1)
+                print(" ")
+                print("原始点", pt.x, " ", pt.y)
+                print("目标点", self.target_cloud.points[nn_idx], "索引是", nn_idx)
+                print("二者距离", dis)
+                
+                
+                
             
             
          
@@ -105,6 +172,43 @@ class Point2D:
     def __repr__(self):
         return f"Point2D(x={self.x}, y={self.y})"
 
+# 2d 点云类
+class Cloud2d:
+    def __init__(self):
+        # 假设点云是由若干点 (x, y) 组成的
+        self.points = []
+        self.width = 0
+
+    def push_back(self, point):
+        p = np.array([point.x, point.y])
+        self.points.append(p)
+
+    def __repr__(self):
+        return f"Cloud2d(points={self.points})"
+    
+# kdtree 类
+class KdTree():
+    def __init__(self):
+        self.kdtree = None
+
+    def setInputCloud(self, cloud):
+        if(cloud == None):
+            raise ValueError("点云是空的，无法构建 KDTree")
+        self.kdtree = KDTree(np.array(cloud.points))
+
+    def nearestKSearch(self, point, k):
+        p = np.array([point.x, point.y])
+        k_sqr_distances, k_indices = self.kdtree.query(p, k=k)
+        return k_indices, k_sqr_distances
+
+
+# class Scan2d():
+#     def __init__(self):
+#         self.ranges = None
+
+#     def __repr__(self):
+#         return f"Scan2d(ranges={self.ranges})"
+        
 
 def main(args=None):
     rclpy.init(args=args)
